@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.tripo/
+.env
+.env.*
+!.env.example
+*.log
+assets/tripo-out/
+assets/*.result.json
+output/*
+!output/street.png
+!output/GAME-QA.md
+jam-reference.html
+platform-spec.json
+platform-spec.md
+*.blend
+*.blend1

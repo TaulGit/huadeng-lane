@@ -1,0 +1,1 @@
+{"name":"xingxia-lane","version":"1.0.0","type":"module","scripts":{"build":"vite build","test":"node --test tests/*.test.js"},"dependencies":{"three":"*","vite":"*"}}

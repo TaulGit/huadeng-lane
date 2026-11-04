@@ -1,0 +1,27 @@
+{
+  "gameId": 12281,
+  "title": "花灯里：星匣市首富",
+  "tags": [
+    "模拟经营",
+    "治愈",
+    "3D"
+  ],
+  "gameCategory": [
+    10004
+  ],
+  "summary": "建造温暖街区，调整商店售价，照顾居民心情，在14天内成为街区新星。",
+  "cover": "./cover.png",
+  "gameFile": "./dist",
+  "gameType": 0,
+  "screen": 0,
+  "priceType": 0,
+  "visibility": 1,
+  "capabilityDeclaration": {
+    "schemaVersion": 1,
+    "capabilities": {
+      "storage": {
+        "enabled": true
+      }
+    }
+  }
+}
