@@ -1,3 +1,4 @@
+import { setAdOpen } from './music.js';
 import { claimSubsidy } from './subsidy.js';
 import './style.css';import {playEffect} from './effects.js';import {TYPES,EVENTS,fresh,metrics,build,upgrade,settle,restore} from './sim.js';import {createWorld} from './world.js';
 let state=fresh(),selected=1,running=false,sdk=null,world=null,ready=false;const $=s=>document.querySelector(s),money=n=>'¥'+Math.round(n).toLocaleString('zh-CN');function toast(t){$('#toast').textContent=t;$('#toast').classList.add('show');setTimeout(()=>$('#toast').classList.remove('show'),3500);}function modal(html){$('#modalbody').innerHTML=html;$('#modal').showModal();}$('#close').onclick=()=>$('#modal').close();
@@ -21,6 +22,7 @@ $('#supply').onclick = async () => {
   if (!ready || running || !sdk || state.subsidyDay === state.day) return;
   const app = $('#app');
   app.inert = true;
+  setAdOpen(true);
   try {
     await claimSubsidy(sdk, state, async next => {
       const result = await persist(next);
@@ -31,6 +33,7 @@ $('#supply').onclick = async () => {
     toast(error.code === 'AD_USER_CANCELLED' ? '已取消观看' : errorText(error));
   } finally {
     app.inert = false;
+    setAdOpen(false);
     render();
   }
 };
