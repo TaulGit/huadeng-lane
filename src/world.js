@@ -7,10 +7,36 @@ const scene=new THREE.Scene();addLandscape(scene);const camera=new THREE.Perspec
 function box(w,h,d,x,y,z,color){let o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshStandardMaterial({color,roughness:1}));o.position.set(x,y,z);scene.add(o);return o;}
 box(34,.7,15,0,-.4,0,'#b7855c');box(34,.1,3.2,0,.02,1,'#8e9473');let tiles=[];for(let x=-15;x<=15;x+=2)for(let z of [-6,-4,-2,4,6])box(1.97,.15,1.97,x,.03,z,'#e9dcb3');for(let z of [-.55,2.55])box(34,.02,.07,0,.1,z,'#fff2c9');for(let x of [-14,14])for(let z=0;z<2.4;z+=.6)box(1.4,.02,.3,x,.12,z,'#fff2c9');
 for(let i=0;i<8;i++){let t=box(3.8,.12,4.5,-14+i*4,.12,-4.5,'#d0d99b');t.userData.slot=i;tiles.push(t);}
-const loader=new GLTFLoader(),models={};let names=['ramen','bookshop','florist','onsen','townhouse','treehouse','garden','tree','bench','pole','bicycle','hedge'];let count=0;await Promise.all(names.map(async n=>{try{models[n]=(await loader.loadAsync(`./models/${n}.glb`)).scene;}catch(e){console.error(n,e);}progress(++count,names.length);}));
+const loader=new GLTFLoader(),models={};const walkers=['walker-student','walker-gardener','walker-neighbor'];let names=[...walkers,'ramen','bookshop','florist','onsen','townhouse','treehouse','garden','tree','bench','pole','bicycle','hedge'];let count=0;await Promise.all(names.map(async n=>{try{models[n]=(await loader.loadAsync(`./models/${n}.glb`)).scene;}catch(e){console.error(n,e);}progress(++count,names.length);}));
 function model(n,x,z,width){let original=models[n];if(!original)return null;let o=original.clone(true),bounds=new THREE.Box3().setFromObject(o),size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3()),k=width/Math.max(size.x,size.z);o.scale.setScalar(k);o.position.set(x-center.x*k,.22-bounds.min.y*k,z-center.z*k);scene.add(o);return o;}
 for(let x of [-12,-4,4,12])model('tree',x,5.5,1.7);for(let x of [-8,0,8]){model('bench',x,4.5,1.8);model('hedge',x+1.8,6,1.5);}model('bicycle',10,4,1.2);for(let x of [-15,1,15])model('pole',x,3.4,1.2);
 let buildings=[],people=[];function sync(state,selected){for(let o of buildings)if(o)scene.remove(o);buildings=state.slots.map((b,i)=>b?model(b.type,-14+i*4,-4.5,3.4):null);tiles.forEach((t,i)=>t.material.color.set(i===selected?'#f2bd67':state.slots[i]?'#d0d99b':'#e4d4a5'));}
 const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();let down;renderer.domElement.addEventListener('pointerdown',e=>down=[e.clientX,e.clientY]);renderer.domElement.addEventListener('pointerup',e=>{if(!down||Math.hypot(e.clientX-down[0],e.clientY-down[1])>5)return;let r=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(pointer,camera);let hit=ray.intersectObjects(tiles)[0];if(hit)onPick(hit.object.userData.slot);});
-function animateCustomers(active){people.forEach(p=>scene.remove(p));people=[];if(active)for(let i=0;i<24;i++){let p=new THREE.Group();let body=new THREE.Mesh(new THREE.CapsuleGeometry(.13,.3,3,6),new THREE.MeshStandardMaterial({color:['#cf785e','#779b95','#d6ae64'][i%3]}));body.position.y=.45;p.add(body);let head=new THREE.Mesh(new THREE.SphereGeometry(.13,8,6),new THREE.MeshStandardMaterial({color:'#e7bc94'}));head.position.y=.8;p.add(head);p.position.set(-16+i*1.3,.1,-1.5+(i%2)*5);p.userData.speed=.015+(i%3)*.005;scene.add(p);people.push(p);}}
-new ResizeObserver(()=>{let w=host.clientWidth,h=host.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();}).observe(host);renderer.setAnimationLoop(()=>{people.forEach(p=>{p.position.x+=p.userData.speed;if(p.position.x>16)p.position.x=-16;});controls.update();renderer.render(scene,camera);});return {sync,animateCustomers,missing:names.filter(n=>!models[n])};}
+function animateCustomers(active) {
+  people.forEach(person => scene.remove(person));
+  people = [];
+  if (!active) return;
+  for (let i = 0; i < 24; i++) {
+    const person = models[walkers[i % walkers.length]].clone(true);
+    const direction = i % 2 ? -1 : 1;
+    person.rotation.y = direction * Math.PI / 2;
+    person.position.set(-16 + i * 1.33, .12, direction > 0 ? -1.35 : 3.12);
+    person.userData.walk = { direction, pace: .78 + (i % 5) * .09, phase: i };
+    scene.add(person);
+    people.push(person);
+  }
+}
+let previousTime;
+function moveCustomers(time) {
+  const delta = Math.min(.1, (time - (previousTime ?? time)) / 1000);
+  previousTime = time;
+  for (const person of people) {
+    const walk = person.userData.walk;
+    person.position.x += delta * walk.pace * walk.direction;
+    if (Math.abs(person.position.x) > 16.5) person.position.x = -16.49 * walk.direction;
+    walk.phase += delta * walk.pace * 8;
+    person.position.y = .12 + .035 * Math.abs(Math.sin(walk.phase));
+    person.rotation.z = .034 * Math.sin(walk.phase);
+  }
+}
+new ResizeObserver(()=>{let w=host.clientWidth,h=host.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();}).observe(host);renderer.setAnimationLoop(time=>{moveCustomers(time);controls.update();renderer.render(scene,camera);});return {sync,animateCustomers,missing:names.filter(n=>!models[n])};}

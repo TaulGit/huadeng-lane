@@ -82,3 +82,5 @@ blender --background --factory-startup --python scripts/build_scene.py
 8 项逻辑测试通过，生产构建与星匣结构检查通过。浏览器玩法、真实云存档和移动端布局仍需平台内验收。每日可自愿观看一次广告领取 120 资金。真实广告须在 LOFTER 渠道验收；活动报名与公开发布尚未完成。
 
 参考 [Minami Lane](https://store.steampowered.com/app/2678990/Minami_Lane/) 的街区经营与美术方向；[活动介绍](https://www.virtualoverapp.com/cms/286687/xxgamejam2.html)。仓库不包含参考游戏截图或原作模型。公开仓库不代表授予额外的代码或美术许可；本仓库尚未选择开源许可证。
+
+[更新公告 · 街坊们出门啦](announcements/2026-11-15.md)
