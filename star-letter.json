@@ -21,6 +21,9 @@
     "capabilities": {
       "storage": {
         "enabled": true
+      },
+      "exchange": {
+        "enabled": true
       }
     }
   }
