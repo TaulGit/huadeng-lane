@@ -12,6 +12,10 @@ for role, coat, hair in [('student','denim','hair'),('gardener','jade','hair'),(
     for name, rgb in colors.items():
         m = bpy.data.materials.new(name)
         m.diffuse_color = (*rgb,1)
+        m.use_nodes = True
+        surface = m.node_tree.nodes.get("Principled BSDF")
+        surface.inputs["Base Color"].default_value = (*rgb, 1)
+        surface.inputs["Roughness"].default_value = 0.84
         mats[name] = m
     def oval(name, pos, scale, color):
         bpy.ops.mesh.primitive_uv_sphere_add(segments=12, ring_count=8, location=pos)
@@ -44,3 +48,4 @@ for role, coat, hair in [('student','denim','hair'),('gardener','jade','hair'),(
     bpy.ops.object.select_all(action='SELECT')
     bpy.ops.object.join()
     bpy.ops.export_scene.gltf(filepath=str(out / ('walker-'+role+'.glb')),export_format='GLB')
+
