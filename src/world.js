@@ -1,3 +1,4 @@
+import { streetWalk } from './street-walk.js';
 import { addLandscape } from './landscape.js';
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
@@ -12,7 +13,8 @@ function model(n,x,z,width){let original=models[n];if(!original)return null;let 
 for(let x of [-12,-4,4,12])model('tree',x,5.5,1.7);for(let x of [-8,0,8]){model('bench',x,4.5,1.8);model('hedge',x+1.8,6,1.5);}model('bicycle',10,4,1.2);for(let x of [-15,1,15])model('pole',x,3.4,1.2);
 let storefronts=[];
 let buildings=[],people=[];function sync(state,selected){storefronts=state.slots.flatMap((b,i)=>b?.price?[-14+i*4]:[]);for(let o of buildings)if(o)scene.remove(o);buildings=state.slots.map((b,i)=>b?model(b.type,-14+i*4,-4.5,3.4):null);tiles.forEach((t,i)=>t.material.color.set(i===selected?'#f2bd67':state.slots[i]?'#d0d99b':'#e4d4a5'));}
-const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();let down;renderer.domElement.addEventListener('pointerdown',e=>down=[e.clientX,e.clientY]);renderer.domElement.addEventListener('pointerup',e=>{if(!down||Math.hypot(e.clientX-down[0],e.clientY-down[1])>5)return;let r=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(pointer,camera);let hit=ray.intersectObjects(tiles)[0];if(hit)onPick(hit.object.userData.slot);});
+const walkView=streetWalk(renderer.domElement,controls,camera);
+const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();let down;renderer.domElement.addEventListener('pointerdown',e=>down=[e.clientX,e.clientY]);renderer.domElement.addEventListener('pointerup',e=>{if(walkView.active||!down||Math.hypot(e.clientX-down[0],e.clientY-down[1])>5)return;let r=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(pointer,camera);let hit=ray.intersectObjects(tiles)[0];if(hit)onPick(hit.object.userData.slot);});
 function animateCustomers(active) {
   people.forEach(person => scene.remove(person));
   people = [];
@@ -72,4 +74,4 @@ function moveCustomers(time) {
     person.rotation.z = .034 * Math.sin(walk.phase);
   }
 }
-new ResizeObserver(()=>{let w=host.clientWidth,h=host.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();}).observe(host);renderer.setAnimationLoop(time=>{moveCustomers(time);controls.update();renderer.render(scene,camera);});return {sync,animateCustomers,missing:names.filter(n=>!models[n])};}
+new ResizeObserver(()=>{let w=host.clientWidth,h=host.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();}).observe(host);renderer.setAnimationLoop(time=>{moveCustomers(time);if(!walkView.active)controls.update();renderer.render(scene,walkView.camera(time));});return {sync,animateCustomers,missing:names.filter(n=>!models[n])};}
